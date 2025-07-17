@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
@@ -8,30 +7,8 @@ app.use(express.json());
 // Allow all origins in CORS for simplicity
 app.use(cors());
 
-// MongoDB connection string - uses Atlas in production, local in development
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb+srv://bindhaniasish2002:Asishbindhani2002@cluster0.dwqz4vg.mongodb.net/mern-todo?retryWrites=true&w=majority';
-
 // JWT Secret
 const JWT_SECRET = 'secretkey';
-
-// Connect to MongoDB with error handling
-let isConnected = false;
-
-const connectDB = async () => {
-  try {
-    if (!isConnected) {
-      await mongoose.connect(MONGO_URI);
-      isConnected = true;
-      console.log('MongoDB connected!');
-    }
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    // Continue even if MongoDB connection fails
-  }
-};
-
-// Try to connect but don't block server startup
-connectDB();
 
 // Health check endpoint
 app.get('/', (req, res) => {
