@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import Login from './login'
+import Login from './Login'
 import Signup from './Signup'
 import TodoList from './TodoList'
 import './App.css'
