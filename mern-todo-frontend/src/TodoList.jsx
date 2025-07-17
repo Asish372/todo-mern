@@ -12,7 +12,7 @@ export default function TodoList({ token, setToken }) {
   
   // Configure axios with auth header
   const api = axios.create({
-    baseURL: 'https://mern-todo-app-backend-asish372.vercel.app/api',
+    baseURL: 'https://mern-todo-backend-asish.onrender.com/api',
     headers: { Authorization: `Bearer ${token}` }
   });
   

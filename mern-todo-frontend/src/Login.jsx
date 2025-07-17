@@ -20,7 +20,7 @@ export default function Login({ setToken }) {
       
       try {
         // Try the direct URL first
-        const apiUrl = 'https://mern-todo-app-backend-asish372.vercel.app/api/auth/login';
+        const apiUrl = 'https://mern-todo-backend-asish.onrender.com/api/auth/login';
         const res = await axios.post(apiUrl, { 
           username: fixedUsername, 
           password: fixedPassword 
@@ -28,8 +28,9 @@ export default function Login({ setToken }) {
         console.log('Login successful:', res.data);
         setToken(res.data.token);
         return;
+      // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        console.log('Direct URL failed, trying local server');
+        console.log('Direct URL failed, trying local server:', err.message);
       }
       
       try {
@@ -41,8 +42,9 @@ export default function Login({ setToken }) {
         console.log('Login successful with local server:', res.data);
         setToken(res.data.token);
         return;
+      // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        console.log('Local server failed, using demo mode');
+        console.log('Local server failed, using demo mode:', err.message);
       }
       
       // If all else fails, use demo mode
