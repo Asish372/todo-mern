@@ -12,7 +12,12 @@ export default function Signup() {
     e.preventDefault();
     setError('');
     try {
-      await axios.post('http://localhost:5000/api/auth/signup', { username, password });
+      // Use relative URL in production, absolute in development
+      const apiUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000/api/auth/signup'
+        : '/api/auth/signup';
+      
+      await axios.post(apiUrl, { username, password });
       navigate('/login');
     } catch (error) {
       setError(error.response?.data?.message || 'Registration failed');

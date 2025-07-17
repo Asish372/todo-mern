@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('./models/User');
-const Task = require('./models/task');
+const Task = require('./models/Task');
 
 // MongoDB Atlas connection string
 const MONGO_URI = 'mongodb+srv://bindhaniasish2002:Asishbindhani2002@cluster0.dwqz4vg.mongodb.net/mern-todo?retryWrites=true&w=majority';

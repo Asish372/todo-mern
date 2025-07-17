@@ -7,9 +7,13 @@ export default function TodoList({ token, setToken }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Configure axios with auth header
+  // Configure axios with auth header - use relative URL in production
+  const baseURL = window.location.hostname === 'localhost'
+    ? 'http://localhost:5000/api'
+    : '/api';
+    
   const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL,
     headers: { Authorization: `Bearer ${token}` }
   });
 
@@ -21,13 +25,17 @@ export default function TodoList({ token, setToken }) {
   const fetchTasks = async () => {
     try {
       setLoading(true);
+      console.log('Fetching tasks with token:', token);
       const res = await api.get('/tasks');
+      console.log('Tasks response:', res.data);
       setTasks(res.data);
       setError('');
     } catch (err) {
-      setError('Failed to fetch tasks');
+      console.error('Error fetching tasks:', err);
+      setError('Failed to fetch tasks: ' + (err.response?.data?.message || err.message));
       if (err.response?.status === 401) {
         // Token expired or invalid
+        console.log('Token expired or invalid, logging out');
         setToken(null);
       }
     } finally {
@@ -40,11 +48,14 @@ export default function TodoList({ token, setToken }) {
     if (!newTask.trim()) return;
     
     try {
+      console.log('Adding task:', newTask);
       const res = await api.post('/tasks', { title: newTask });
+      console.log('Add task response:', res.data);
       setTasks([...tasks, res.data]);
       setNewTask('');
     } catch (err) {
-      setError('Failed to add task');
+      console.error('Error adding task:', err);
+      setError('Failed to add task: ' + (err.response?.data?.message || err.message));
     }
   };
 

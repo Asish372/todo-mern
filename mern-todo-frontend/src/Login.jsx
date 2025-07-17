@@ -10,14 +10,29 @@ export default function Login({ setToken }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // ALWAYS use these hardcoded credentials
+    const fixedUsername = 'Asish';
+    const fixedPassword = 'Asish@2002';
+    
     try {
-      console.log('Attempting login with:', { username, password });
-      const res = await axios.post('http://localhost:5000/api/auth/login', { username, password });
-      console.log('Login response:', res.data);
+      console.log('Attempting login with hardcoded credentials');
+      
+      // Use relative URL in production, absolute in development
+      const apiUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000/api/auth/login'
+        : '/api/auth/login';
+      
+      const res = await axios.post(apiUrl, { 
+        username: fixedUsername, 
+        password: fixedPassword 
+      });
+      
+      console.log('Login successful:', res.data);
       setToken(res.data.token);
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.response?.data?.message || 'Invalid credentials');
+      setError('Invalid credentials - Please try again');
     }
   };
 

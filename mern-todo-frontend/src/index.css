@@ -177,6 +177,26 @@ body {
   color: var(--light-text);
 }
 
+.demo-credentials {
+  background-color: rgba(74, 108, 247, 0.1);
+  border-left: 4px solid var(--primary-color);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.demo-credentials p {
+  margin: 0.3rem 0;
+  text-align: left;
+  color: var(--text-color);
+}
+
+.demo-credentials p:first-child {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
 .auth-form a {
   color: var(--primary-color);
   text-decoration: none;

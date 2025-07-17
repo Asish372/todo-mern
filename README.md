@@ -65,12 +65,35 @@ A simple and efficient ToDo application built using the MERN stack (MongoDB, Exp
 
 ## Login Credentials
 
-For testing purposes, you can use the following credentials:
+For testing purposes, use the following credentials:
 
 - Username: `Asish`
 - Password: `Asish@2002`
 
-These credentials are pre-configured in the database. You can also create your own account using the Sign Up page.
+These credentials are pre-configured in the database and will be automatically used when you click the Login button, regardless of what you type in the form fields. This ensures a consistent demo experience.
+
+## Deployment
+
+### Backend Deployment (Vercel)
+
+1. Push the code to GitHub
+2. Create a new project in Vercel
+3. Import the GitHub repository
+4. Select the `mern-todo-backend` directory
+5. Add the following environment variables:
+   - `MONGODB_URI`: Your MongoDB Atlas connection string
+6. Deploy
+
+### Frontend Deployment (Vercel)
+
+1. Create a new project in Vercel
+2. Import the same GitHub repository
+3. Select the `mern-todo-frontend` directory
+4. Deploy
+
+### Connecting Frontend and Backend
+
+The frontend is configured to use relative URLs in production, so it will automatically connect to the backend if both are deployed on the same domain.
 
 ## Technologies Used
 

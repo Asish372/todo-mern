@@ -4,13 +4,16 @@ const cors = require('cors');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://mern-todo-app-asish372.vercel.app'],
+  credentials: true
+}));
 
-// MongoDB Atlas connection string
-const MONGO_URI = 'mongodb+srv://bindhaniasish2002:Asishbindhani2002@cluster0.dwqz4vg.mongodb.net/mern-todo?retryWrites=true&w=majority';
+// MongoDB connection string - uses Atlas in production, local in development
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb+srv://bindhaniasish2002:Asishbindhani2002@cluster0.dwqz4vg.mongodb.net/mern-todo?retryWrites=true&w=majority';
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'asish-bindhani-secure-jwt-secret-key';
+const JWT_SECRET = 'secretkey';
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB connected!'))
