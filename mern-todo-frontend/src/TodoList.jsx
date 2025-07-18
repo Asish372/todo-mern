@@ -16,7 +16,7 @@ const TodoList = ({ token, setToken }) => {
   const api = axios.create({
     baseURL: window.location.hostname === 'localhost' 
       ? 'http://localhost:5000/api'
-      : '/api',
+      : 'https://mern-todo-backend-asish.onrender.com/api',
     headers: { Authorization: `Bearer ${token}` }
   });
   

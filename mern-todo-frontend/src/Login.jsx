@@ -33,7 +33,7 @@ const Login = ({ setToken }) => {
       // API URL based on environment
       const apiUrl = window.location.hostname === 'localhost' 
         ? 'http://localhost:5000/api/auth/login'
-        : '/api/auth/login';
+        : 'https://mern-todo-backend-asish.onrender.com/api/auth/login';
       
       const res = await axios.post(apiUrl, { username, password });
       
