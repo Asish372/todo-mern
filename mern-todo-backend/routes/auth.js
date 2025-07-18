@@ -1,49 +1,110 @@
-
 const express = require('express');
 const jwt = require('jsonwebtoken');
-
-// Mock User model
-const User = {
-  findOne: () => Promise.resolve(null),
-  save: () => Promise.resolve({})
-};
-
+const User = require('../models/User');
 const router = express.Router();
 
-// Signup route
+// Register a new user
 router.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
   try {
-    // Just return success for demo
-    console.log('Demo signup for:', username);
+    const { username, password } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    
+    // Create new user
+    const user = new User({ username, password });
+    await user.save();
+    
     res.status(201).json({ message: 'User created successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Something went wrong' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Login route
+// Login user
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
   try {
-    console.log('Login attempt for username:', username, 'password:', password);
+    const { username, password } = req.body;
     
-    // HARDCODED LOGIN FOR DEMO
+    // Demo login for the assignment
     if (username === 'Asish' && password === 'Asish@2002') {
-      console.log('Demo credentials match!');
+      // Find or create demo user
+      let user = await User.findOne({ username: 'Asish' });
       
-      // Create token without database
-      const token = jwt.sign({ userId: 'demo-user-id' }, 'secretkey', { expiresIn: '1h' });
-      console.log('Token created:', token);
-      return res.json({ token, username: 'Asish' });
+      if (!user) {
+        user = new User({ username: 'Asish', password: 'Asish@2002' });
+        await user.save();
+      }
+      
+      // Generate token
+      const token = jwt.sign(
+        { userId: user._id }, 
+        process.env.JWT_SECRET || 'secretkey', 
+        { expiresIn: '24h' }
+      );
+      
+      return res.json({ 
+        token, 
+        user: { 
+          id: user._id, 
+          username: user.username 
+        } 
+      });
     }
     
-    // If not using demo credentials, return error
-    console.log('Not using demo credentials');
-    return res.status(400).json({ message: 'Please use the demo credentials: Asish / Asish@2002' });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ message: 'Something went wrong' });
+    // Find user
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    
+    // Check password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    
+    // Generate token
+    const token = jwt.sign(
+      { userId: user._id }, 
+      process.env.JWT_SECRET || 'secretkey', 
+      { expiresIn: '24h' }
+    );
+    
+    res.json({ 
+      token, 
+      user: { 
+        id: user._id, 
+        username: user.username 
+      } 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get current user
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ message: 'No authentication token' });
+    }
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secretkey');
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

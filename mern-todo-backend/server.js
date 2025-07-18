@@ -1,42 +1,46 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const authRoutes = require('./routes/auth');
+const taskRoutes = require('./routes/tasks');
 
+// Initialize express app
 const app = express();
-app.use(express.json());
 
-// Allow all origins in CORS for simplicity
+// Middleware
+app.use(express.json());
 app.use(cors());
 
-// JWT Secret
-const JWT_SECRET = 'secretkey';
+// MongoDB connection
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb+srv://bindhaniasish2002:Asishbindhani2002@cluster0.dwqz4vg.mongodb.net/mern-todo?retryWrites=true&w=majority';
 
-// Health check endpoint
-app.get('/', (req, res) => {
-  res.send('API is running');
-});
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
+
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static(path.join(__dirname, '../mern-todo-frontend/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../mern-todo-frontend/dist', 'index.html'));
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
+  console.error(err.stack);
   res.status(500).json({ message: 'Server error', error: err.message });
 });
 
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
-const taskRoutes = require('./routes/tasks');
-app.use('/api/tasks', taskRoutes);
-
+// Start server
 const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// For Vercel serverless functions
-if (process.env.VERCEL) {
-  // Export the Express app as a serverless function
-  module.exports = app;
-} else {
-  // Start the server normally for local development
-  app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
-}
-
-// Export JWT_SECRET for other modules
-module.exports.JWT_SECRET = JWT_SECRET;
+module.exports = app;

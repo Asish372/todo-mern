@@ -1,95 +1,77 @@
 const express = require('express');
-// Use mock Task model instead of requiring the actual model
-const Task = {
-  find: () => Promise.resolve([]),
-  findOneAndUpdate: () => Promise.resolve(null),
-  findOneAndDelete: () => Promise.resolve(null)
-};
-
-// Simple auth middleware
-const auth = (req, res, next) => {
-  req.user = { id: 'demo-user' };
-  next();
-};
-
+const Task = require('../models/Task');
+const auth = require('../middleware/auth');
 const router = express.Router();
 
-// Get all tasks for logged-in user
+// Get all tasks for the authenticated user
 router.get('/', auth, async (req, res) => {
-  console.log('GET /tasks - User ID:', req.user.id);
   try {
-    // Return demo tasks instead of querying the database
-    const demoTasks = [
-      { _id: 'demo1', title: 'Welcome to Todo App', completed: false, user: req.user.id },
-      { _id: 'demo2', title: 'This is a demo task', completed: true, user: req.user.id },
-      { _id: 'demo3', title: 'Add your own tasks below', completed: false, user: req.user.id }
-    ];
-    console.log('Demo tasks returned');
-    res.json(demoTasks);
-  } catch (err) {
-    console.error('Error fetching tasks:', err);
-    res.status(500).json({ message: 'Error fetching tasks' });
+    const tasks = await Task.find({ user: req.user._id }).sort({ createdAt: -1 });
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Create new task
+// Create a new task
 router.post('/', auth, async (req, res) => {
-  console.log('POST /tasks - User ID:', req.user.id);
-  console.log('Request body:', req.body);
   try {
     const { title } = req.body;
+    
     if (!title) {
       return res.status(400).json({ message: 'Title is required' });
     }
     
-    // Create a demo task instead of saving to database
-    const task = {
-      _id: 'demo' + Date.now(),
-      user: req.user.id,
+    const task = new Task({
       title,
-      completed: false
-    };
-    console.log('Demo task created:', task);
+      user: req.user._id
+    });
+    
+    await task.save();
     res.status(201).json(task);
-  } catch (err) {
-    console.error('Error creating task:', err);
-    res.status(500).json({ message: 'Error creating task' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Update task (mark complete/incomplete or edit title)
+// Update a task
 router.put('/:id', auth, async (req, res) => {
-  console.log('PUT /tasks/:id - User ID:', req.user.id, 'Task ID:', req.params.id);
-  console.log('Request body:', req.body);
   try {
     const { title, completed } = req.body;
     
-    // Return a demo updated task
-    const task = {
-      _id: req.params.id,
-      user: req.user.id,
-      title: title || 'Updated task',
-      completed: completed || false
-    };
+    // Find task and check ownership
+    const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
     
-    console.log('Demo task updated:', task);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Update fields
+    if (title !== undefined) task.title = title;
+    if (completed !== undefined) task.completed = completed;
+    
+    await task.save();
     res.json(task);
-  } catch (err) {
-    console.error('Error updating task:', err);
-    res.status(500).json({ message: 'Error updating task' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Delete task
+// Delete a task
 router.delete('/:id', auth, async (req, res) => {
-  console.log('DELETE /tasks/:id - User ID:', req.user.id, 'Task ID:', req.params.id);
   try {
-    // Just return success message for demo
-    console.log('Demo task deleted, ID:', req.params.id);
-    res.json({ message: 'Task deleted' });
-  } catch (err) {
-    console.error('Error deleting task:', err);
-    res.status(500).json({ message: 'Error deleting task' });
+    const task = await Task.findOneAndDelete({ 
+      _id: req.params.id, 
+      user: req.user._id 
+    });
+    
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    res.json({ message: 'Task deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

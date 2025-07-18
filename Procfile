@@ -1,0 +1,1 @@
+web: cd mern-todo-backend && npm start

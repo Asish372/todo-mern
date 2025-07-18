@@ -11,6 +11,11 @@ A simple and efficient ToDo application built using the MERN stack (MongoDB, Exp
 - **RESTful API**: Built with Express.js and Node.js
 - **Frontend**: Developed with React.js and styled using CSS
 
+## Demo Credentials
+
+- **Username**: Asish
+- **Password**: Asish@2002
+
 ## Getting Started
 
 ### Prerequisites
@@ -84,3 +89,16 @@ A simple and efficient ToDo application built using the MERN stack (MongoDB, Exp
     - `/components`: React components
     - `App.jsx`: Main application component
     - `index.css`: Global styles
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/signup`: Register a new user
+- `POST /api/auth/login`: Login a user
+- `GET /api/auth/me`: Get current user
+
+### Tasks
+- `GET /api/tasks`: Get all tasks for the authenticated user
+- `POST /api/tasks`: Create a new task
+- `PUT /api/tasks/:id`: Update a task
+- `DELETE /api/tasks/:id`: Delete a task

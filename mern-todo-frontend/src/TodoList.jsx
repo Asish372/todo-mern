@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './TodoList.css';
 
-export default function TodoList({ token, setToken }) {
+const TodoList = ({ token, setToken }) => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || {});
 
   // Check if we're in demo mode
   const isDemoMode = token && token.startsWith('demo-token-');
   
   // Configure axios with auth header
   const api = axios.create({
-    baseURL: 'https://mern-todo-backend-asish.onrender.com/api',
+    baseURL: window.location.hostname === 'localhost' 
+      ? 'http://localhost:5000/api'
+      : '/api',
     headers: { Authorization: `Bearer ${token}` }
   });
   
-  // Mock data for demo mode
+  // Demo tasks for fallback
   const demoTasks = [
     { _id: 'demo1', title: 'Welcome to Todo App', completed: false },
     { _id: 'demo2', title: 'This is a demo task', completed: true },
@@ -31,31 +35,20 @@ export default function TodoList({ token, setToken }) {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      console.log('Fetching tasks with token:', token);
       
-      // If in demo mode, use demo tasks
       if (isDemoMode) {
-        console.log('Using demo tasks');
         setTasks(demoTasks);
-        setError('');
         return;
       }
       
       const res = await api.get('/tasks');
-      console.log('Tasks response:', res.data);
       setTasks(res.data);
-      setError('');
     } catch (err) {
       console.error('Error fetching tasks:', err);
-      
-      // If error, fall back to demo mode
-      console.log('Falling back to demo mode');
       setTasks(demoTasks);
       
       if (err.response?.status === 401) {
-        // Token expired or invalid
-        console.log('Token expired or invalid, logging out');
-        setToken(null);
+        handleLogout();
       }
     } finally {
       setLoading(false);
@@ -67,86 +60,72 @@ export default function TodoList({ token, setToken }) {
     if (!newTask.trim()) return;
     
     try {
-      console.log('Adding task:', newTask);
-      
-      // If in demo mode, add a demo task
       if (isDemoMode) {
-        console.log('Adding demo task');
         const newDemoTask = {
           _id: 'demo' + Date.now(),
           title: newTask,
           completed: false
         };
-        setTasks([...tasks, newDemoTask]);
-        setNewTask('');
-        return;
+        setTasks([newDemoTask, ...tasks]);
+      } else {
+        const res = await api.post('/tasks', { title: newTask });
+        setTasks([res.data, ...tasks]);
       }
-      
-      const res = await api.post('/tasks', { title: newTask });
-      console.log('Add task response:', res.data);
-      setTasks([...tasks, res.data]);
-      setNewTask('');
     } catch (err) {
       console.error('Error adding task:', err);
       
-      // If error, add a demo task anyway
+      // Fallback to demo mode
       const newDemoTask = {
         _id: 'demo' + Date.now(),
         title: newTask,
         completed: false
       };
-      setTasks([...tasks, newDemoTask]);
+      setTasks([newDemoTask, ...tasks]);
+    } finally {
       setNewTask('');
     }
   };
 
   const toggleComplete = async (id, completed) => {
     try {
-      const task = tasks.find(t => t._id === id);
+      const updatedTasks = tasks.map(task => 
+        task._id === id ? { ...task, completed: !completed } : task
+      );
+      setTasks(updatedTasks);
       
-      // If in demo mode, update the task locally
-      if (isDemoMode || id.startsWith('demo')) {
-        console.log('Updating demo task');
-        setTasks(tasks.map(t => t._id === id ? {...t, completed: !completed} : t));
-        return;
+      if (!isDemoMode && !id.startsWith('demo')) {
+        await api.put(`/tasks/${id}`, { completed: !completed });
       }
-      
-      const res = await api.put(`/tasks/${id}`, { 
-        title: task.title, 
-        completed: !completed 
-      });
-      setTasks(tasks.map(t => t._id === id ? res.data : t));
     } catch (err) {
-      // If error, update the task locally anyway
-      setTasks(tasks.map(t => t._id === id ? {...t, completed: !completed} : t));
+      console.error('Error updating task:', err);
     }
   };
 
   const deleteTask = async (id) => {
     try {
-      // If in demo mode, delete the task locally
-      if (isDemoMode || id.startsWith('demo')) {
-        console.log('Deleting demo task');
-        setTasks(tasks.filter(task => task._id !== id));
-        return;
-      }
+      setTasks(tasks.filter(task => task._id !== id));
       
-      await api.delete(`/tasks/${id}`);
-      setTasks(tasks.filter(task => task._id !== id));
+      if (!isDemoMode && !id.startsWith('demo')) {
+        await api.delete(`/tasks/${id}`);
+      }
     } catch (err) {
-      // If error, delete the task locally anyway
-      setTasks(tasks.filter(task => task._id !== id));
+      console.error('Error deleting task:', err);
     }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
   };
 
   return (
     <div className="todo-container">
       <div className="todo-header">
-        <h2>My Tasks</h2>
+        <div className="user-info">
+          <h2>My Tasks</h2>
+          <p>Welcome, {user.username || 'User'}</p>
+        </div>
         <button onClick={handleLogout} className="btn-logout">Logout</button>
       </div>
       
@@ -158,44 +137,57 @@ export default function TodoList({ token, setToken }) {
           placeholder="What needs to be done?"
           className="task-input"
         />
-        <button type="submit" className="btn-add">Add</button>
+        <button type="submit" className="btn-add">Add Task</button>
       </form>
       
       {error && <div className="error-message">{error}</div>}
       
       {loading ? (
-        <div className="loading-spinner">Loading tasks...</div>
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading tasks...</p>
+        </div>
       ) : (
-        <ul className="task-list">
+        <div className="task-list-container">
           {tasks.length === 0 ? (
-            <li className="no-tasks">Your task list is empty. Add your first task above!</li>
+            <div className="no-tasks">
+              <p>Your task list is empty</p>
+              <p>Add your first task above!</p>
+            </div>
           ) : (
-            tasks.map((task, index) => (
-              <li 
-                key={task._id} 
-                className={`task-item ${task.completed ? 'completed' : ''}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="task-content">
-                  <input
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() => toggleComplete(task._id, task.completed)}
-                  />
-                  <span className="task-title">{task.title}</span>
-                </div>
-                <button 
-                  onClick={() => deleteTask(task._id)}
-                  className="btn-delete"
-                  aria-label="Delete task"
+            <ul className="task-list">
+              {tasks.map((task, index) => (
+                <li 
+                  key={task._id} 
+                  className={`task-item ${task.completed ? 'completed' : ''}`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  Delete
-                </button>
-              </li>
-            ))
+                  <div className="task-content">
+                    <label className="checkbox-container">
+                      <input
+                        type="checkbox"
+                        checked={task.completed}
+                        onChange={() => toggleComplete(task._id, task.completed)}
+                      />
+                      <span className="checkmark"></span>
+                    </label>
+                    <span className="task-title">{task.title}</span>
+                  </div>
+                  <button 
+                    onClick={() => deleteTask(task._id)}
+                    className="btn-delete"
+                    aria-label="Delete task"
+                  >
+                    <span className="delete-icon">×</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
-        </ul>
+        </div>
       )}
     </div>
   );
-}
+};
+
+export default TodoList;
