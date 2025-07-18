@@ -11,10 +11,6 @@ A simple and efficient ToDo application built using the MERN stack (MongoDB, Exp
 - **RESTful API**: Built with Express.js and Node.js
 - **Frontend**: Developed with React.js and styled using CSS
 
-## Demo Credentials
-
-- **Username**: Asish
-- **Password**: Asish@2002
 
 ## Getting Started
 
@@ -39,10 +35,7 @@ A simple and efficient ToDo application built using the MERN stack (MongoDB, Exp
 
 3. Create a `.env` file in the root of the backend directory with the following variables:
    ```
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
-   PORT=5000
-   ```
+
 
 4. Start the backend server:
    ```
