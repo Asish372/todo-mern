@@ -24,7 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
 // Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
+// if (process.env.NODE_ENV === 'production') {
   // Set static folder
 //   app.use(express.static(path.join(__dirname, '../mern-todo-frontend/dist')));
   
